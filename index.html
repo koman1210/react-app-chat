@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOCKET.IO Chatroom</title>
+    <style>
+        #messages {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        #messages li {
+            padding: 5px 10px;
+        }
+
+        #messagé li:nth-child(odd) {
+            background: #f2f2f2;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .joined {
+            color: green;
+        }
+
+        .left {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <ul id="messages"></ul>
+    <input type="text" id="messageInput" placeholder="Type your message" />
+    <button id="sendButton">Send</button>
+    <!-- <script src="https://cdnjs.cloundflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script> -->
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        const socket = io("http://localhost:3002");
+        const messageInput = document.getElementById("messageInput");
+        const sendButton = document.getElementById("sendButton");
+        const messageList = document.getElementById("messages");
+
+        function addMessage(message, className) {
+            const li = document.createElement("li");
+            li.textContent = message;
+            if (className) {
+                li.classList.add(className);
+            }
+            messageList.appendChild(li);
+        }
+
+        socket.on("message", (data) => {
+            addMessage(`${data.username}: ${data.message}`);
+        });
+
+        socket.on("user-joined", (data) => {
+            addMessage(data.message, "joined");
+        });
+        socket.on("user-left", (data) => {
+            addMessage(data.message, "left");
+        });
+        sendButton.addEventListener("click", () => {
+            const message = messageInput.value.trim();
+            if (message !== "") {
+                console.log(message);
+                socket.emit("newMessage", { message, username: socket.id });
+                messageInput.value = "";
+            }
+        });
+
+        socket.on("connect", () => {
+            addMessage("You have joined the chat!");
+        });
+    </script>
+</body>
+
+</html>
